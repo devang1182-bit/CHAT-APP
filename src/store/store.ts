@@ -12,10 +12,10 @@ import {
   REGISTER,
 } from 'redux-persist';
 import storage from "./persist-storage";
-import chooseWordSlice from "../features/choose-word/choose-word.slice";
+import WordSlice from "../features/word/word.slice";
 
 const rootReducer = combineReducers({
-  targetWord: chooseWordSlice
+  word: WordSlice
 });
 
 const persistConfig = {

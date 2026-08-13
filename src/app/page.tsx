@@ -1,54 +1,46 @@
 "use client";
 
 import { useEffect } from "react";
-
-import InputWordBoard from "@/components/input-word-board/input-word-board";
-
 import { useAppDispatch } from "@/hooks/dispatch";
 import { useAppSelector } from "@/hooks/selector";
-
-import { ChooseWordAction } from "@/features/choose-word/choose-word.action";
+import { ChooseWordAction } from "@/features/word/choose-word/choose-word.action";
+import { playGame, reset } from "@/features/word/word.slice";
 
 export default function Home() {
   const dispatch = useAppDispatch();
+  const choices = ["ROCK", "PAPER", "SCISSORS"];
 
-  const {
-    word,
-    isLoading,
-    error,
-  } = useAppSelector((state) => state.targetWord);
+  const { word, isLoading, error, playerVal, playerScore, compScore } =
+    useAppSelector((state) => state.word);
+
+  const handleClick = (playerVal: string) => {
+    dispatch(playGame(playerVal));
+  };
+
+  const handleReset = () => {
+    dispatch(reset());
+  }
+
 
   useEffect(() => {
-    if (!word && !isLoading) {
       dispatch(ChooseWordAction());
-    }
-  }, [dispatch, word, isLoading]);
-
-  useEffect(() => {
-    if (word) {
-      console.log("Target word:", word);
-    }
-  }, [word]);
-
-  if (isLoading) {
-    return <div>Choosing word...</div>;
-  }
-
-  if (error) {
-    return (
-      <div>
-        Failed to choose word: {error}
-      </div>
-    );
-  }
-
-  if (!word) {
-    return <div>Loading...</div>;
-  }
+  }, [playerVal]);
 
   return (
     <>
-      <InputWordBoard />
+      {choices.map((item, index) => (
+        <button key={index} onClick={() => handleClick(item)}>{item}</button>
+      ))}
+
+      <div className="content">
+        <p>Your choice: {playerVal}</p>
+        <p>Computers choice: {word}</p>
+        <h2>Your Score:{playerScore}</h2>
+        <h2>Computer Score: {compScore}</h2>
+      </div>
+
+
+      <button onClick={handleReset}>Reset</button>
     </>
   );
 }
