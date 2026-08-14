@@ -1,46 +1,63 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch } from "@/hooks/dispatch";
 import { useAppSelector } from "@/hooks/selector";
-import { ChooseWordAction } from "@/features/word/choose-word/choose-word.action";
-import { playGame, reset } from "@/features/word/word.slice";
+import { playGame, reset } from "@/features/word/number.slice";
+import { ChooseNumberAction } from "@/features/word/choose-number/choose-number.action";
 
 export default function Home() {
   const dispatch = useAppDispatch();
-  const choices = ["ROCK", "PAPER", "SCISSORS"];
+  const [value, setValue] = useState<number>(0);
+  const { number, userGuess, result, isLoading } = useAppSelector(
+    (state) => state.number,
+  );
 
-  const { word, isLoading, error, playerVal, playerScore, compScore } =
-    useAppSelector((state) => state.word);
-
-  const handleClick = (playerVal: string) => {
+  const handleClick = (playerVal: number) => {
     dispatch(playGame(playerVal));
   };
 
   const handleReset = () => {
     dispatch(reset());
-  }
+  };
 
+  const handleSubmit = () => {
+    dispatch(playGame(value));
+  };
 
   useEffect(() => {
-      dispatch(ChooseWordAction());
-  }, [playerVal]);
+    dispatch(ChooseNumberAction());
+  }, []);
 
   return (
     <>
-      {choices.map((item, index) => (
-        <button key={index} onClick={() => handleClick(item)}>{item}</button>
-      ))}
+      {isLoading ? (
+        <div>Loading</div>
+      ) : (
+        <div>
+          <input
+            type="number"
+            placeholder="Enter a number"
+            value={value==0? " " : value}
+            onChange={(event) => setValue(Number(event.target.value))}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleClick(Number(value));
+              }
+            }}
+          />
 
-      <div className="content">
-        <p>Your choice: {playerVal}</p>
-        <p>Computers choice: {word}</p>
-        <h2>Your Score:{playerScore}</h2>
-        <h2>Computer Score: {compScore}</h2>
-      </div>
+          <button onClick={handleSubmit}>Submit</button>
 
+          <div className="content">
+            <p>Your choice: {userGuess}</p>
+            <p>Computers choice: {number}</p>
+            <h2>Result: {result}</h2>
+          </div>
 
-      <button onClick={handleReset}>Reset</button>
+          <button onClick={handleReset}>Reset</button>
+        </div>
+      )}
     </>
   );
 }

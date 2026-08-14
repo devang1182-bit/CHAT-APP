@@ -1,9 +1,9 @@
 import axios from "axios";
 
-export const ChooseWordService = {
-  getWord: async () => {
+export const ChooseNumberService = {
+  getNumber: async () => {
     const response = await axios.get(
-      `/api/choose-word`,
+      `/api/choose-number`,
     );
     console.log(response.data);
     return response.data;

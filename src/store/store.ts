@@ -12,16 +12,16 @@ import {
   REGISTER,
 } from 'redux-persist';
 import storage from "./persist-storage";
-import WordSlice from "../features/word/word.slice";
+import NumberSlice from "../features/word/number.slice";
 
 const rootReducer = combineReducers({
-  word: WordSlice
+  number: NumberSlice
 });
 
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ["targetWord"]
+  whitelist: ["number"]
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

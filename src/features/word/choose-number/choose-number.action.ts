@@ -1,12 +1,12 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { ChooseWordService } from "./choose-word.service";
+import { ChooseNumberService } from "./choose-number.service";
 
-export const ChooseWordAction = createAsyncThunk(
-  "targetWord/chooseWord",
+export const ChooseNumberAction = createAsyncThunk(
+  "targetNumber/chooseNumber",
   async (_,thunkAPI) => {
     try {
-      const data = await ChooseWordService.getWord();
+      const data = await ChooseNumberService.getNumber();
       console.log(data);
       return data;
       
