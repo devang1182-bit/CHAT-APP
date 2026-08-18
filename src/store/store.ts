@@ -1,8 +1,8 @@
 "use client";
 
-import { configureStore, combineReducers } from '@reduxjs/toolkit';
-import { 
-  persistStore, 
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
+import {
+  persistStore,
   persistReducer,
   FLUSH,
   REHYDRATE,
@@ -10,18 +10,20 @@ import {
   PERSIST,
   PURGE,
   REGISTER,
-} from 'redux-persist';
+} from "redux-persist";
 import storage from "./persist-storage";
-import NumberSlice from "../features/word/number.slice";
+import userSlice from "../features/users/user.slice";
+import messageSlice from "../features/messages/messages.slice";
 
 const rootReducer = combineReducers({
-  number: NumberSlice
+  users: userSlice,
+  messages: messageSlice,
 });
 
 const persistConfig = {
-  key: 'root',
+  key: "root",
   storage,
-  whitelist: ["number"]
+  whitelist: ["users", " messages"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
