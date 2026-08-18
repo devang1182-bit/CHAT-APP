@@ -1,7 +1,7 @@
 "use client";
 
-import Chat from "@/components/chat";
-import useWebSocketConnectionHook from "@/components/socket.io-client";
+import Chat from "@/app/chat/page";
+import useWebSocketConnectionHook from "@/server/socket.io-client";
 export default function Home() {
 
     useWebSocketConnectionHook(() => {

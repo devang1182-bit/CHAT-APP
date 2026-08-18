@@ -1,4 +1,5 @@
-"use client"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+"use client";
 
 import { useState } from "react";
 import { z } from "zod";
@@ -114,10 +115,15 @@ export default function Register() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       console.log(result);
-      await setDoc(doc(db, "users", user.uid), {
-        email: user.email,
-        createdAt: serverTimestamp(),
-      });
+      await setDoc(
+        doc(db, "users", user.uid),
+        {
+          email: user.email,
+          username: user.displayName || "User",
+          createdAt: serverTimestamp(),
+        },
+        { merge: true },
+      );
       showSnackbar("Registration successful");
       router.push("/");
     } catch (err) {

@@ -21,9 +21,9 @@ import {
 
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
-import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { auth, provider } from "@/firebase/firebase";
+import { auth } from "@/firebase/firebase";
 import Link from "next/link";
 import { useAppDispatch } from "@/hooks/dispatch";
 import { GetCurrentUserAction } from "@/features/users/get-current-user/get-current-user.action";
@@ -84,7 +84,7 @@ export default function Login() {
 
   const handleGoogleLogin = async () => {
     try {
-      dispatch(GetCurrentUserAction());
+      await dispatch(GetCurrentUserAction());
       showSnackbar("User Logged In Successfully");
       setTimeout(() => router.push("/"), 500);
     } catch (error) {

@@ -1,40 +1,143 @@
 import { createServer } from "http";
-import { parse } from "url";
 import next from "next";
 import { Server } from "socket.io";
 
+import {
+  collection,
+  addDoc,
+} from "firebase/firestore";
+
+import { db } from "./firebase/firebase";
 
 const dev = process.env.NODE_ENV !== "production";
+const port = Number(process.env.PORT) || 3000;
+
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-app.prepare().then(() => {
-  // 1. Create the base HTTP server
+async function startServer() {
+  await app.prepare();
+
   const httpServer = createServer((req, res) => {
-    const parsedUrl = parse(req.url, true);
-    handle(req, res, parsedUrl);
+    handle(req, res);
   });
 
-  // 2. Attach Socket.IO to the HTTP server
   const io = new Server(httpServer, {
     cors: {
-      origin: "*", // Adjust this in production for security
+      origin: "http://localhost:3000",
     },
   });
 
-  // 3. Listen for client connections
   io.on("connection", (socket) => {
-    console.log("A user connected:", socket.id);
+    console.log("User connected:", socket.id);
+
+
+    socket.on("onConnection", (userid: string) => {
+      console.log("User logged in:", userid);
+
+      socket.data.userid = userid;
+    });
+
+    socket.on("joinRoom", (roomId: string) => {
+      console.log(
+        `${socket.id} joined room: ${roomId}`,
+      );
+
+      socket.join(roomId);
+    });
+
+
+    socket.on("leaveRoom", (roomId: string) => {
+      console.log(
+        `${socket.id} left room: ${roomId}`,
+      );
+
+      socket.leave(roomId);
+    });
+
+
+    socket.on("sendMessage", async (data) => {
+      try {
+        console.log("Message received:", data);
+
+        const {
+          roomId,
+          text,
+          senderId,
+          receiverId,
+        } = data;
+
+        if (
+          !roomId ||
+          !text ||
+          !senderId ||
+          !receiverId
+        ) {
+          console.log(
+            "Invalid message data",
+          );
+
+          return;
+        }
+
+
+        const message = {
+          roomId,
+          senderId,
+          receiverId,
+          message: text,
+          createdAt: Date.now(),
+        };
+
+  
+        const messageRef = await addDoc(
+          collection(db, "messages"),
+          message,
+        );
+
+   
+        const savedMessage = {
+          id: messageRef.id,
+          ...message,
+        };
+
+        console.log(
+          "Message saved:",
+          savedMessage,
+        );
+
+        io.to(roomId).emit(
+          "newMessage",
+          savedMessage,
+        );
+      } catch (error) {
+        console.error(
+          "Error sending message:",
+          error,
+        );
+      }
+    });
+
+    socket.on("typing", (data) => {
+      socket.to(data.roomId).emit(
+        "typing",
+        data,
+      );
+    });
 
     socket.on("disconnect", () => {
-      console.log("User disconnected:", socket.id);
+      console.log(
+        "User disconnected:",
+        socket.id,
+      );
     });
   });
 
-  // 4. Start listening on your port
-  const PORT = process.env.PORT || 3000;
-  httpServer.listen(PORT, (err) => {
-    if (err) throw err;
-    console.log(`> Ready on http://localhost:${PORT}`);
+  httpServer.listen(port, () => {
+    console.log(
+      `> Ready on http://localhost:${port}`,
+    );
   });
-});
+}
+
+startServer();

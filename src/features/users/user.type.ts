@@ -1,9 +1,14 @@
 export type User = {
-  userid?: string;
+  id?: string;
   email: string | null;
   username?: string | null;
 };
 
+export type CurrentUser = {
+  uid : string;
+  emai : string ;
+  displayName : string ;
+}
 
 export type UserState = {
   users: User[];

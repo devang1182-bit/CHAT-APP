@@ -28,7 +28,7 @@ const usersSlice = createSlice({
       .addCase(GetUsersAction.fulfilled, (state, action) => {
         state.loading = false;
         state.users = action.payload
-        console.log(state.users , "bsdkgnsdgdlsgldns");
+        console.log(state.users)
       })
       .addCase(GetUsersAction.rejected, (state, action) => {
         state.loading = false;
@@ -41,7 +41,8 @@ const usersSlice = createSlice({
       .addCase(GetCurrentUserAction.fulfilled, (state, action) => {
         state.loading = false;
         state.currentUser = action.payload?.user ?? null;
-        console.log(state.currentUser, "Current User");
+        // console.log(action.payload)
+        // console.log(state.currentUser, "Current User");
       })
       .addCase(GetCurrentUserAction.rejected, (state, action) => {
         state.loading = false;
