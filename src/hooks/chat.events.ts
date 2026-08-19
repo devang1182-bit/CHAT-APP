@@ -5,10 +5,10 @@ import { useAppDispatch } from "@/hooks/dispatch";
 import { addMessage } from "@/features/messages/messages.slice";
 import { Message } from "@/features/messages/messages.type";
 import socket from "@/lib/socket";
-import { User } from "@/features/users/user.type";
+import { CurrentUser } from "@/features/users/user.type";
 
 type UseChatSocketProps = {
-  currentUser: User | null;
+  currentUser: CurrentUser | null;
   targetUser: string | null;
   roomId: string | null;
 };
@@ -43,7 +43,6 @@ const useChatSocket = ({
       socket.off("connect");
       socket.off("disconnect");
       socket.off("connect_error");
-
       socket.disconnect();
     };
   }, [currentUser]);
@@ -61,6 +60,8 @@ const useChatSocket = ({
       console.log("Left room:", roomId);
     };
   }, [roomId]);
+
+
 
   useEffect(() => {
     if (!roomId) return;
@@ -94,15 +95,27 @@ const useChatSocket = ({
   const sendTyping = () => {
     if (!roomId || !currentUser) return;
 
+    console.log("sendTyping() is running");
+
     socket.emit("typing", {
       roomId,
-      userid: currentUser,
+      userid: currentUser.uid,
+    });
+  };
+
+  const stopTyping = () => {
+    if (!roomId || !currentUser) return;
+
+    socket.emit("stopTyping", {
+      roomId,
+      userid: currentUser.uid,
     });
   };
 
   return {
     sendMessage,
     sendTyping,
+    stopTyping
   };
 };
 

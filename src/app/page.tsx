@@ -1,12 +1,9 @@
 "use client";
 
 import Chat from "@/app/chat/page";
-import useWebSocketConnectionHook from "@/server/socket.io-client";
-export default function Home() {
+import useChatSocket from "@/hooks/chat.events";
 
-    useWebSocketConnectionHook(() => {
-     console.log("me conected");
-   }, "MY_EVENT_NAME");
+export default function Home() {
  
   return (
     <>

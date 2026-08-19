@@ -31,7 +31,7 @@ import Link from "next/link";
 
 const RegisterUserSchema = z
   .object({
-    username: z.string().min(4, "Username should be of minimum 4 characters"),
+    displayName: z.string().min(4, "Username should be of minimum 4 characters"),
     email: z.string().email("Invalid email"),
     password: z
       .string()
@@ -88,7 +88,7 @@ export default function Register() {
 
   const handleRegister = async (data: RegisterFormData) => {
     try {
-      const { email, password, username } = data;
+      const { email, password, displayName } = data;
 
       await createUserWithEmailAndPassword(auth, email, password);
       const user = auth.currentUser;
@@ -96,7 +96,7 @@ export default function Register() {
       if (user) {
         await setDoc(doc(db, "users", user.uid), {
           email,
-          username,
+          displayName,
           createdAt: serverTimestamp(),
         });
       }
@@ -119,7 +119,7 @@ export default function Register() {
         doc(db, "users", user.uid),
         {
           email: user.email,
-          username: user.displayName || "User",
+          displayName: user.displayName || "User",
           createdAt: serverTimestamp(),
         },
         { merge: true },
@@ -156,9 +156,9 @@ export default function Register() {
             sx={{ mb: 2 }}
             fullWidth
             label="Name"
-            {...register("username")}
-            error={!!errors.username}
-            helperText={errors.username?.message}
+            {...register("displayName")}
+            error={!!errors.displayName}
+            helperText={errors.displayName?.message}
           />
 
           <TextField

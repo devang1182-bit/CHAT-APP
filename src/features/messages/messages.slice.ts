@@ -23,7 +23,8 @@ const messageSlice = createSlice({
     },
 
     addMessage: (state, action: PayloadAction<Message>) => {
-      state.messages.push(action.payload);
+      state.messages = [...state.messages , action.payload];
+      console.log(state.messages, "Messages in local storage");
     },
   },
 

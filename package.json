@@ -1,13 +1,13 @@
 {
-  "name": "wordle",
+  "name": "chat-app",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 4000",
     "build": "next build",
-    "start": "next start",
-    "dev-start": "nodemon server.js",
+    "start": "next start -p 4000",
+    "dev-start": "nodemon server.ts",
     "lint": "eslint"
   },
   "dependencies": {
@@ -37,6 +37,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
     "nodemon": "^3.1.14",
-    "typescript": "^5"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }

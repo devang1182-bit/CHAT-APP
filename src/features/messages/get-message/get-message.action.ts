@@ -6,6 +6,7 @@ export const GetMessagesAction = createAsyncThunk(
   "messages/getMessages",
   async (roomId: string, thunkAPI) => {
     try {
+      console.log("Message action ran");
       const data = await GetMessagesService(roomId);
 
       return data;

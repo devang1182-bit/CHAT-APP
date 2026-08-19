@@ -1,4 +1,4 @@
 {
-  "watch": ["server.js"],
+  "watch": ["server.ts"],
   "ignore": [".next", "node_modules"]
 }

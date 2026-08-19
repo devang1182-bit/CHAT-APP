@@ -1,18 +1,18 @@
 export type User = {
-  id?: string;
+  id: string;
   email: string | null;
-  username?: string | null;
+  displayName?: string | null;
 };
 
 export type CurrentUser = {
-  uid : string;
-  emai : string ;
-  displayName : string ;
-}
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+};
 
 export type UserState = {
   users: User[];
-  currentUser: User | null;
+  currentUser: CurrentUser | null;
   loading: boolean;
   error: string | null;
 };

@@ -33,30 +33,52 @@ import { clearMessages } from "@/features/messages/messages.slice";
 import { Message } from "@/features/messages/messages.type";
 import useChatSocket from "@/hooks/chat.events";
 import { GetMessagesAction } from "@/features/messages/get-message/get-message.action";
+import socket from "@/lib/socket";
 
 const Chat = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const [typing, setTyping] = useState<boolean>(false);
   const [messageText, setMessageText] = useState("");
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const { users, currentUser } = useAppSelector((state) => state.users);
-  console.log(currentUser,"Current User");
+  console.log(currentUser, "Current User");
   const { messages } = useAppSelector((state) => state.messages);
   const targetUser = selectedUser?.id ?? null;
 
   const roomId =
-    currentUser?.userid && targetUser
-      ? [currentUser.userid, targetUser].sort().join("_")
+    currentUser?.uid && targetUser
+      ? [currentUser.uid, targetUser].sort().join("_")
       : null;
 
   const menuOpen = Boolean(anchorEl);
 
-  const { sendMessage, sendTyping } = useChatSocket({
+  const { sendMessage, sendTyping, stopTyping } = useChatSocket({
     currentUser,
     targetUser,
     roomId,
   });
+
+  useEffect(() => {
+    if (!roomId) return;
+    const handleTyping = (data: { roomId: string; userid: string }) => {
+      setTyping(true);
+      console.log("someone is typing", data);
+    };
+
+    socket.on("typing", handleTyping);
+  }, [roomId]);
+
+  useEffect(() => {
+    if (!roomId) return;
+    const handleStopTyping = (data: { roomId: string; userid: string }) => {
+      setTyping(false);
+      console.log("someone has been stopped  typing", data);
+    };
+
+    socket.on("typing-stop", handleStopTyping);
+  }, [roomId]);
 
   useEffect(() => {
     dispatch(GetUsersAction());
@@ -69,10 +91,10 @@ const Chat = () => {
   };
 
   useEffect(() => {
-  if (!roomId) return;
+    if (!roomId) return;
 
-  dispatch(GetMessagesAction(roomId));
-}, [roomId, dispatch]);
+    dispatch(GetMessagesAction(roomId));
+  }, [roomId, dispatch]);
 
   const handleSendMessage = () => {
     if (!messageText.trim()) return;
@@ -85,8 +107,13 @@ const Chat = () => {
     setMessageText(value);
     if (value.trim()) {
       sendTyping();
+      console.log(currentUser?.displayName, "is typing");
     }
   };
+
+  //   const handleStopTyping = (value: string) => {
+  //     stopTyping();
+  // };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -130,7 +157,7 @@ const Chat = () => {
           }}
         >
           <Typography variant="h6">
-            {selectedUser?.username || "Chat App"}
+            {selectedUser?.displayName || "Chat App"}
           </Typography>
 
           <IconButton color="inherit" onClick={handleMenuOpen}>
@@ -163,24 +190,23 @@ const Chat = () => {
           }}
         >
           <Box sx={{ p: 2 }}>
-            {/* <Typography variant="h6" fontWeight={600}>
-              Users
-            </Typography> */}
             <h6>Users</h6>
           </Box>
 
           <Divider />
 
           <List>
-            {users.map((user) => (
-              <ListItemButton
-                key={user.userid}
-                selected={selectedUser?.userid === user.userid}
-                onClick={() => handleSelectUser(user)}
-              >
-                <ListItemText primary={user.username} />
-              </ListItemButton>
-            ))}
+            {users
+              .filter((user) => user.id !== currentUser?.uid)
+              .map((user) => (
+                <ListItemButton
+                  key={user.id}
+                  selected={selectedUser?.id === user.id}
+                  onClick={() => handleSelectUser(user)}
+                >
+                  <ListItemText primary={user.displayName} />
+                </ListItemButton>
+              ))}
           </List>
         </Paper>
 
@@ -198,7 +224,7 @@ const Chat = () => {
             }}
           >
             <Typography variant="h6">
-              {selectedUser ? selectedUser.username : "Select a user"}
+              {selectedUser ? selectedUser.displayName : "Select a user"}
             </Typography>
           </Box>
 
@@ -236,31 +262,41 @@ const Chat = () => {
               </Box>
             ) : (
               messages.map((msg: Message) => {
-                const isCurrentUser = msg.senderId === currentUser?.userid;
+                const isCurrentUser = msg.senderId === currentUser?.uid;
 
                 return (
-                  <Box
-                    key={msg.id}
-                    sx={{
-                      display: "flex",
-                      justifyContent: isCurrentUser ? "flex-end" : "flex-start",
-                      mb: 1,
-                    }}
-                  >
-                    <Paper
+                  <>
+                    <Box
+                      key={msg.id}
                       sx={{
-                        p: 1.5,
-                        maxWidth: "60%",
+                        display: "flex",
+                        justifyContent: isCurrentUser
+                          ? "flex-end"
+                          : "flex-start",
+                        mb: 1,
                       }}
                     >
-                      <Typography>{msg.message}</Typography>
-                    </Paper>
-                  </Box>
+                      <Paper
+                        sx={{
+                          p: 1.5,
+                          maxWidth: "60%",
+                        }}
+                      >
+                        <Typography>{msg.message}</Typography>
+                      </Paper>
+                    </Box>
+                  </>
                 );
               })
             )}
           </Box>
-
+          <div>
+            {typing ? (
+              <p style={{ height: "20px", color: "gray" }}>Typing</p>
+            ) : (
+              <></>
+            )}
+          </div>
           {selectedUser && (
             <Box
               sx={{
@@ -275,7 +311,9 @@ const Chat = () => {
                 size="small"
                 value={messageText}
                 placeholder="Type a message..."
-                onChange={(event) => handleMessageChange(event.target.value)}
+                onChange={(event) =>
+                  handleMessageChange(event.target.value) ?? stopTyping()
+                }
                 onKeyDown={handleKeyDown}
               />
 

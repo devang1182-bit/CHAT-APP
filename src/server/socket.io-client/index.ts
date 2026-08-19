@@ -4,11 +4,11 @@ import { useEffect } from "react";
 import { useAppDispatch } from "@/hooks/dispatch";
 import { addMessage } from "@/features/messages/messages.slice";
 import { Message } from "@/features/messages/messages.type";
-import { User } from "@/features/users/user.type";
+import { CurrentUser } from "@/features/users/user.type";
 import socket from "@/lib/socket";
 
 type UseChatSocketProps = {
-  currentUser: User | null;
+  currentUser: CurrentUser | null;
   targetUser: string | null;
   roomId: string | null;
 };
@@ -21,14 +21,14 @@ const useChatSocket = ({
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if (!currentUser?.userid) return;
+    if (!currentUser?.uid) return;
 
     socket.connect();
 
     const handleConnect = () => {
       console.log("Socket connected:", socket.id);
 
-      socket.emit("onConnection", currentUser.userid);
+      socket.emit("onConnection", currentUser.uid);
     };
 
     const handleDisconnect = () => {
@@ -36,10 +36,7 @@ const useChatSocket = ({
     };
 
     const handleConnectionError = (error: Error) => {
-      console.error(
-        "Socket connection error:",
-        error.message,
-      );
+      console.error("Socket connection error:", error.message);
     };
 
     socket.on("connect", handleConnect);
@@ -49,17 +46,14 @@ const useChatSocket = ({
     return () => {
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
-      socket.off(
-        "connect_error",
-        handleConnectionError,
-      );
+      socket.off("connect_error", handleConnectionError);
 
       socket.disconnect();
     };
-  }, [currentUser?.userid]);
+  }, [currentUser?.uid]);
 
   useEffect(() => {
-    if (!roomId || !currentUser?.userid) return;
+    if (!roomId || !currentUser?.uid) return;
 
     const joinRoom = () => {
       console.log("Joining room:", roomId);
@@ -82,7 +76,7 @@ const useChatSocket = ({
         socket.emit("leaveRoom", roomId);
       }
     };
-  }, [roomId, currentUser?.userid]);
+  }, [roomId, currentUser?.uid]);
 
   useEffect(() => {
     if (!roomId) return;
@@ -105,14 +99,14 @@ const useChatSocket = ({
 
     if (!roomId) return;
 
-    if (!currentUser?.userid) return;
+    if (!currentUser?.uid) return;
 
     if (!targetUser) return;
 
     socket.emit("sendMessage", {
       roomId,
       text: text.trim(),
-      senderId: currentUser.userid,
+      senderId: currentUser.uid,
       receiverId: targetUser,
     });
   };
@@ -120,11 +114,11 @@ const useChatSocket = ({
   const sendTyping = () => {
     if (!roomId) return;
 
-    if (!currentUser?.userid) return;
+    if (!currentUser?.uid) return;
 
     socket.emit("typing", {
       roomId,
-      userid: currentUser.userid,
+      userid: currentUser.uid,
     });
   };
 

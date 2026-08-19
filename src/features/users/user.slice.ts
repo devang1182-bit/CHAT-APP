@@ -40,8 +40,7 @@ const usersSlice = createSlice({
       })
       .addCase(GetCurrentUserAction.fulfilled, (state, action) => {
         state.loading = false;
-        state.currentUser = action.payload?.user ?? null;
-        // console.log(action.payload)
+        state.currentUser = action.payload ?? null;
         // console.log(state.currentUser, "Current User");
       })
       .addCase(GetCurrentUserAction.rejected, (state, action) => {
