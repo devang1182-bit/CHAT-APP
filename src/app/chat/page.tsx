@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import { useEffect, useState } from "react";
+import { MouseEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -34,18 +35,43 @@ import { Message } from "@/features/messages/messages.type";
 import useChatSocket from "@/hooks/chat.events";
 import { GetMessagesAction } from "@/features/messages/get-message/get-message.action";
 import socket from "@/lib/socket";
+import { DeleteMessageAction } from "@/features/messages/delete-message/delete-message.action";
 
 const Chat = () => {
+  let typingTimeout: string | number | NodeJS.Timeout | undefined;
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [typing, setTyping] = useState<boolean>(false);
   const [messageText, setMessageText] = useState("");
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [menuControl, setMenuControl] = useState({
+    visible: false,
+    x: 0,
+    y: 0,
+  });
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const { users, currentUser } = useAppSelector((state) => state.users);
   console.log(currentUser, "Current User");
   const { messages } = useAppSelector((state) => state.messages);
+  console.log("Messages :", messages );
   const targetUser = selectedUser?.id ?? null;
+
+  const handleContextMenu = (e: MouseEvent<HTMLSpanElement, MouseEvent>) => {
+    e.preventDefault();
+
+    setMenuControl({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+    });
+  };
+
+  useEffect(() => {
+    const closeMenu = () =>
+      setMenuControl((prev) => ({ ...prev, visible: false }));
+    window.addEventListener("click", closeMenu);
+    return () => window.removeEventListener("click", closeMenu);
+  }, []);
 
   const roomId =
     currentUser?.uid && targetUser
@@ -54,31 +80,52 @@ const Chat = () => {
 
   const menuOpen = Boolean(anchorEl);
 
-  const { sendMessage, sendTyping, stopTyping } = useChatSocket({
+  const { sendMessage, sendTyping } = useChatSocket({
     currentUser,
     targetUser,
     roomId,
   });
 
+  const handleDelete = (msg : Message) => {
+    console.log("message being deleted" , msg);
+    dispatch(DeleteMessageAction(msg.id));
+  };
+
+  // const debouncedStopTyping = useDebounceCallback(() => {
+  //   stopTyping();
+  // }, 0);
+
+  // const handleStopTyping = () => {
+  //   debouncedStopTyping();
+  // };
+
   useEffect(() => {
     if (!roomId) return;
     const handleTyping = (data: { roomId: string; userid: string }) => {
-      setTyping(true);
+      if (!typing) {
+        setTyping(true);
+      }
+
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        setTyping(false);
+        // handleStopTyping();
+      }, 1000);
       console.log("someone is typing", data);
     };
 
     socket.on("typing", handleTyping);
   }, [roomId]);
 
-  useEffect(() => {
-    if (!roomId) return;
-    const handleStopTyping = (data: { roomId: string; userid: string }) => {
-      setTyping(false);
-      console.log("someone has been stopped  typing", data);
-    };
+  // useEffect(() => {
+  //   if (!roomId) return;
+  //   const handleStopTyping = (data: { roomId: string; userid: string }) => {
+  //     setTyping(false);
+  //     console.log("someone has been stopped  typing", data);
+  //   };
 
-    socket.on("typing-stop", handleStopTyping);
-  }, [roomId]);
+  //   socket.on("typing-stop", handleStopTyping);
+  // }, [roomId]);
 
   useEffect(() => {
     dispatch(GetUsersAction());
@@ -92,9 +139,8 @@ const Chat = () => {
 
   useEffect(() => {
     if (!roomId) return;
-
     dispatch(GetMessagesAction(roomId));
-  }, [roomId, dispatch]);
+  });
 
   const handleSendMessage = () => {
     if (!messageText.trim()) return;
@@ -110,10 +156,6 @@ const Chat = () => {
       console.log(currentUser?.displayName, "is typing");
     }
   };
-
-  //   const handleStopTyping = (value: string) => {
-  //     stopTyping();
-  // };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -157,7 +199,7 @@ const Chat = () => {
           }}
         >
           <Typography variant="h6">
-            {selectedUser?.displayName || "Chat App"}
+            {currentUser?.displayName || "Chat App"}
           </Typography>
 
           <IconButton color="inherit" onClick={handleMenuOpen}>
@@ -190,7 +232,7 @@ const Chat = () => {
           }}
         >
           <Box sx={{ p: 2 }}>
-            <h6>Users</h6>
+            <h3>Users</h3>
           </Box>
 
           <Divider />
@@ -223,7 +265,7 @@ const Chat = () => {
               borderBottom: "1px solid #ddd",
             }}
           >
-            <Typography variant="h6">
+            <Typography variant="h6" color="primary">
               {selectedUser ? selectedUser.displayName : "Select a user"}
             </Typography>
           </Box>
@@ -245,7 +287,7 @@ const Chat = () => {
                   alignItems: "center",
                 }}
               >
-                <Typography color="text.secondary">
+                <Typography color="primary">
                   Select a user to start chatting
                 </Typography>
               </Box>
@@ -263,7 +305,7 @@ const Chat = () => {
             ) : (
               messages.map((msg: Message) => {
                 const isCurrentUser = msg.senderId === currentUser?.uid;
-
+                
                 return (
                   <>
                     <Box
@@ -282,7 +324,40 @@ const Chat = () => {
                           maxWidth: "60%",
                         }}
                       >
-                        <Typography>{msg.message}</Typography>
+                        <Typography
+                          onContextMenu={handleContextMenu}
+                          className={`message-bubble ${isCurrentUser ? "sent" : "received"}`}
+                        >
+                          {msg.message}
+                          {menuControl.visible && (
+                            <button
+                              style={{
+                                color: "black",
+                                position: "absolute",
+                                top: `${menuControl.y}px`,
+                                left: `${menuControl.x}px`,
+                                backgroundColor: "white",
+                                border: "1px solid #ccc",
+                                listStyle: "none",
+                                padding: "5px 0",
+                                margin: 0,
+                                zIndex: 1000,
+                              }}
+                              onClick={() => handleDelete(msg)}
+                            >
+                              Delete Msg
+                            </button>
+                          )}
+                        </Typography>
+                        <div className="msg-time">
+                          {new Date(Number(msg.createdAt)).toLocaleTimeString(
+                            [],
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )}
+                        </div>
                       </Paper>
                     </Box>
                   </>
@@ -292,8 +367,13 @@ const Chat = () => {
           </Box>
           <div>
             {typing ? (
-              <p style={{ height: "20px", color: "gray" }}>Typing</p>
+              <p style={{ color: "black" }}>Typing</p>
             ) : (
+              // <div className="message-row other">
+              //   <div className="typing-bubble">
+              //     <span></span><span></span><span></span>
+              //   </div>
+              // </div>
               <></>
             )}
           </div>
@@ -311,9 +391,7 @@ const Chat = () => {
                 size="small"
                 value={messageText}
                 placeholder="Type a message..."
-                onChange={(event) =>
-                  handleMessageChange(event.target.value) ?? stopTyping()
-                }
+                onChange={(event) => handleMessageChange(event.target.value)}
                 onKeyDown={handleKeyDown}
               />
 

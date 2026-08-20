@@ -39,6 +39,7 @@ const messageSlice = createSlice({
       .addCase(GetMessagesAction.fulfilled, (state, action) => {
         state.loading = false;
         state.messages = action.payload;
+        console.log(action.payload);
       })
 
       .addCase(GetMessagesAction.rejected, (state, action) => {

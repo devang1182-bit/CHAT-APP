@@ -63,21 +63,20 @@ const useChatSocket = ({
 
 
 
-  useEffect(() => {
-    if (!roomId) return;
+  // useEffect(() => {
+  //   if (!roomId) return;
 
-    const handleNewMessage = (message: Message) => {
-      console.log("New message:", message);
+  //   const handleNewMessage = (message: Message) => {
+  //     console.log("New message:", message);
+  //     dispatch(addMessage(message));
+  //   };
 
-      dispatch(addMessage(message));
-    };
+  //   socket.on("newMessage", handleNewMessage);
 
-    socket.on("newMessage", handleNewMessage);
-
-    return () => {
-      socket.off("newMessage", handleNewMessage);
-    };
-  }, [roomId, dispatch]);
+  //   return () => {
+  //     socket.off("newMessage", handleNewMessage);
+  //   };
+  // }, [roomId, dispatch]);
 
   const sendMessage = (text: string) => {
     if (!text.trim()) return;
@@ -87,7 +86,7 @@ const useChatSocket = ({
     socket.emit("sendMessage", {
       roomId,
       text: text.trim(),
-      senderId: currentUser,
+      senderId: currentUser.uid,
       receiverId: targetUser,
     });
   };
@@ -103,19 +102,19 @@ const useChatSocket = ({
     });
   };
 
-  const stopTyping = () => {
-    if (!roomId || !currentUser) return;
+  // const stopTyping = () => {
+  //   if (!roomId || !currentUser) return;
 
-    socket.emit("stopTyping", {
-      roomId,
-      userid: currentUser.uid,
-    });
-  };
+  //   socket.emit("stopTyping", {
+  //     roomId,
+  //     userid: currentUser.uid,
+  //   });
+  // };
 
   return {
     sendMessage,
     sendTyping,
-    stopTyping
+    // stopTyping
   };
 };
 
